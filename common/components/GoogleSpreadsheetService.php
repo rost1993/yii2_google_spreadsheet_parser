@@ -57,6 +57,9 @@ class GoogleSpreadsheetService extends \yii\base\Component {
 
 			$product = trim($this->spreadsheet[$i][0]);
 
+			if(empty($product))
+				continue;
+
 			// Search old data by google spreadsheet
 			$ma = Ma::find()
 				->where(['=', 'category', $category])
