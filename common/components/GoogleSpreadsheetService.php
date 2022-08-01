@@ -4,18 +4,30 @@ namespace common\components;
 
 use console\models\Ma;
 
+/*
+	Parser Google spreadsheet
+*/
 class GoogleSpreadsheetService extends \yii\base\Component {
+
+	// ID document
 	private $id = '10En6qNTpYNeY_YFTWJ_3txXzvmOA7UxSCrKfKCFfaRw';
+	
+	// ID page
 	private $gid = '1428297429';
 
+	// Array data by google spreadsheet
 	private $spreadsheet = [];
 
+	/*
+		Initialize yii2 component
+	*/
 	public function init() {
 		parent::init();
 		$this->loadGoogleSpreadsheet();
 	}
 
 	/*
+		Load google spreadsheet
 	*/
 	private function loadGoogleSpreadsheet() {
 		$csv = file_get_contents('https://docs.google.com/spreadsheets/d/' . $this->id . '/export?format=csv&gid=' . $this->gid);
@@ -24,6 +36,7 @@ class GoogleSpreadsheetService extends \yii\base\Component {
 	}
 
 	/*
+		Parsing array data by google spreadsheet
 	*/
 	public function parse() {
 		$category = '';
@@ -44,11 +57,13 @@ class GoogleSpreadsheetService extends \yii\base\Component {
 
 			$product = trim($this->spreadsheet[$i][0]);
 
+			// Search old data by google spreadsheet
 			$ma = Ma::find()
 				->where(['=', 'category', $category])
 				->andWhere(['=', 'product', $product])
 				->one();
 
+			// If $ma not exists create new object, else update data
 			$ma = $ma === null ? new Ma() : $ma;
 
 			$ma->category = $category;
@@ -71,38 +86,16 @@ class GoogleSpreadsheetService extends \yii\base\Component {
 		}
 	}
 
-	private function processing($value) {
+	/*
+		Processing data by cell
+		Replace service char: $ , \s (all space)
+		Return: string
+	*/
+	private function processing($value) : string {
 		$value = preg_replace('/\s/ui', '', $value);
 		$value = preg_replace('/^\$/ui', '', $value);
 		$value = preg_replace('/\,/ui', '', $value);
 
 		return empty($value) ? 0.0 : $value;
-	}
-
-
-
-
-
-
-
-
-
-
-
-	public function getGoogleSpreadsheet() {
-
-		$csv = file_get_contents('https://docs.google.com/spreadsheets/d/' . $this->id . '/export?format=csv&gid=' . $this->gid);
-		$csv = explode("\r\n", $csv);
-		$array = array_map('str_getcsv', $csv);
-
-		for($i = 3; $i < count($array); $i++) {
-			if($array[$i][0] == 'CO-OP')
-				break;
-
-			if(empty($array[$i][13]))
-				array_push($this->cathegory, trim($array[$i][0]));
-		}
-
-		print_r($this->cathegory);
 	}
 }
